@@ -1,5 +1,5 @@
 import streamlit as st
-from hatespeech_model import predict_hatespeech, load_model_from_hf, predict_hatespeech_from_file
+from hatespeech_model import predict_hatespeech, load_model_from_hf, predict_hatespeech_from_file, predict_hatespeech_from_file_mock, predict_text_mock
 import plotly.graph_objects as go
 import plotly.express as px
 import pandas as pd
@@ -78,7 +78,7 @@ model_choice = "altered" if "Altered" in model_type else "base"
 # Load model with spinner
 with st.spinner('🔄 Loading model... This may take a moment on first run.'):
     try:
-        model, tokenizer_hatebert, tokenizer_rationale, config, device = load_cached_model(model_choice)
+        # model, tokenizer_hatebert, tokenizer_rationale, config, device = load_cached_model(model_choice)
         st.success(f'✅ {model_type} loaded successfully!')
     except Exception as e:
         st.error(f"❌ Error loading model: {str(e)}")
@@ -87,9 +87,9 @@ with st.spinner('🔄 Loading model... This may take a moment on first run.'):
 # Sidebar
 with st.sidebar:
     st.header("⚙️ Settings")
-    st.markdown(f"**Device:** {device.upper()}")
-    st.markdown(f"**Max Length:** {config.get('max_length', 128)}")
-    st.markdown(f"**CNN Filters:** {config.get('cnn_num_filters', 128)}")
+    st.markdown(f"**Device:** CPU")
+    st.markdown(f"**Max Length:** 128")
+    st.markdown(f"**CNN Filters:** 128")
 
     st.divider()
     st.subheader("🔍 File Upload")
@@ -168,15 +168,17 @@ if classify_button:
         with st.spinner('🔄 Analyzing text...'):
             # Get prediction
             start = time.time()
-            result = predict_hatespeech(
-                text=user_input,
-                rationale=optional_rationale if optional_rationale else None,
-                model=model,
-                tokenizer_hatebert=tokenizer_hatebert,
-                tokenizer_rationale=tokenizer_rationale,
-                config=config,
-                device=device
-            )
+            # result = predict_hatespeech(
+            #     text=user_input,
+            #     rationale=optional_rationale if optional_rationale else None,
+            #     model=model,
+            #     tokenizer_hatebert=tokenizer_hatebert,
+            #     tokenizer_rationale=tokenizer_rationale,
+            #     config=config,
+            #     device=device
+            # )
+            result = predict_text_mock(user_input)
+
             end = time.time()
             
             # Extract results
@@ -231,7 +233,7 @@ if classify_button:
                 st.plotly_chart(fig, use_container_width=True)
             
             # Token importance visualization
-            if show_rationale_viz:
+            if show_rationale_viz and model_choice == "altered":
                 st.subheader("🔍 Token Importance Analysis")
                 st.caption("Highlighted words show which parts of the text influenced the prediction")
                 
@@ -284,10 +286,10 @@ if classify_button:
                         'probability_not_hate': float(probabilities[0]),
                         'probability_hate': float(probabilities[1]),
                         'num_tokens': len([t for t in tokens if t not in ['[CLS]', '[SEP]', '[PAD]']]),
-                        'device': device,
+                        'device': 'cpu',
                         'model_config': {
-                            'max_length': config.get('max_length'),
-                            'cnn_filters': config.get('cnn_num_filters'),
+                            'max_length': '128',
+                            'cnn_filters': '128',
                         }
                     })
     if is_file_uploader_visible and uploaded_file is not None:
@@ -299,17 +301,17 @@ if classify_button:
         st.dataframe(file_content.head(3), use_container_width=True)
         with st.spinner('🔄 Analyzing file... This may take a while for large files.'):
             # Call the file prediction function here
-            result = predict_hatespeech_from_file(
-                text_list=file_content["text"], 
-                rationale_list=file_content["CF_Rationales"], 
-                tokenizer_rationale=tokenizer_rationale, 
-                tokenizer_hatebert=tokenizer_hatebert, 
-                true_label=file_content["label"], 
-                model=model, 
-                device=device, 
-                config=config
-            )
-            
+            # result = predict_hatespeech_from_file(
+            #     text_list=file_content["text"], 
+            #     rationale_list=file_content["CF_Rationales"], 
+            #     tokenizer_rationale=tokenizer_rationale, 
+            #     tokenizer_hatebert=tokenizer_hatebert, 
+            #     true_label=file_content["label"], 
+            #     model=model, 
+            #     device=device, 
+            #     config=config
+            # )
+            result = predict_hatespeech_from_file_mock()
             st.success("✅ File analysis complete!")
             st.divider()
             st.header("📊 Analysis Results")

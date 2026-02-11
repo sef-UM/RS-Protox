@@ -464,3 +464,88 @@ def predict_hatespeech(text, rationale, model, tokenizer_hatebert, tokenizer_rat
     )
     
     return result
+
+def predict_hatespeech_from_file_mock():
+    """
+    Mock function for predict_hatespeech_from_file that returns hardcoded data for testing
+    
+    Args:
+        text_list: List of input texts to classify (not used in mock)
+        rationale_list: List of rationale/explanation texts (not used in mock)
+        true_label: True label for evaluation (not used in mock)
+        model: Loaded model (not used in mock)
+        tokenizer_hatebert: HateBERT tokenizer (not used in mock)
+        tokenizer_rationale: Rationale tokenizer (not used in mock)
+        config: Model configuration (not used in mock)
+        device: Device to run on (not used in mock)
+    Returns:
+        Dictionary with hardcoded metrics for testing
+    """
+    # Hardcoded predictions matching the number of samples
+    predictions = [0, 1, 1, 0, 1, 0, 0, 1, 1, 0]
+    true_labels = [0, 1, 1, 0, 0, 0, 1, 1, 1, 0]
+    
+    # Hardcoded resource usage metrics
+    cpu_percent_list = [25.3, 28.1, 26.5, 27.2, 26.8, 27.9, 25.5, 28.3, 26.2, 27.1]
+    memory_percent_list = [145.3, 152.1, 148.5, 151.2, 149.8, 153.2, 146.5, 154.3, 150.2, 152.1]
+    
+    f1 = f1_score(true_labels, predictions, zero_division=0)
+    accuracy = accuracy_score(true_labels, predictions)
+    precision = precision_score(true_labels, predictions, zero_division=0)
+    recall = recall_score(true_labels, predictions, zero_division=0)
+    cm = confusion_matrix(true_labels, predictions).tolist()
+    
+    avg_cpu = sum(cpu_percent_list) / len(cpu_percent_list) if cpu_percent_list else 0
+    avg_memory = sum(memory_percent_list) / len(memory_percent_list) if memory_percent_list else 0
+    peak_memory = max(memory_percent_list) if memory_percent_list else 0
+    peak_cpu = max(cpu_percent_list) if cpu_percent_list else 0
+    
+    # Hardcoded runtime
+    runtime = 12.543
+    
+    return {
+        'f1_score': f1,
+        'accuracy': accuracy,
+        'precision': precision,
+        'recall': recall,
+        'confusion_matrix': cm,
+        'cpu_usage': avg_cpu,
+        'memory_usage': avg_memory,
+        'peak_cpu_usage': peak_cpu,
+        'peak_memory_usage': peak_memory,
+        'runtime': runtime,
+        'predictions': predictions  # Added for visibility
+    }
+
+def predict_text_mock(text, max_length=128):
+    import numpy as np
+
+    # Simple whitespace tokenization for mock output
+    raw_tokens = (text or "").split()
+    mock_tokens = raw_tokens[:max_length]
+
+    # Build a simple attention mask (1 for tokens)
+    attention_mask = [1] * len(mock_tokens)
+
+    # Generate random rationale scores matching token count
+    mock_rationale_scores = np.random.rand(len(mock_tokens)).astype(np.float32)
+    
+    # Randomized probabilities [class_0, class_1]
+    # Class 0 = not hate speech, Class 1 = hate speech
+    mock_probabilities = np.random.rand(2).astype(np.float32)
+    mock_probabilities = mock_probabilities / mock_probabilities.sum()
+    
+    # Prediction (argmax of probabilities)
+    mock_prediction = int(np.argmax(mock_probabilities))  # Class 1: hate speech
+    
+    # Confidence score
+    mock_confidence = float(np.max(mock_probabilities))
+    
+    return {
+        'prediction': mock_prediction,
+        'confidence': mock_confidence,
+        'probabilities': mock_probabilities,
+        'rationale_scores': mock_rationale_scores,
+        'tokens': mock_tokens,
+        'attention_mask': attention_mask
+    }
